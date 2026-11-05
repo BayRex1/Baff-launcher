@@ -97,6 +97,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        if (::pages.isInitialized) { rebuildPages(); rebuildDock() }
         if (!defaultPromptShown && !isDefaultLauncher()) {
             defaultPromptShown = true
             mainHandler.post { showDefaultLauncherPrompt() }
@@ -131,9 +132,7 @@ class MainActivity : Activity() {
             setShadowLayer(12f, 0f, 3f, Color.BLACK)
         }, LinearLayout.LayoutParams(-1, dp(112)))
 
-        val heading = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
-        heading.addView(TextView(this).apply {
-        content.addView(View(this), LinearLayout.LayoutParams(1, dp(54)))
+                content.addView(View(this), LinearLayout.LayoutParams(1, dp(54)))
         pager = HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
             isFillViewport = true
@@ -153,6 +152,27 @@ class MainActivity : Activity() {
             val page = (scrollX / pager.width.coerceAtLeast(1)) + 1
             updateDots(page)
         }
+        pager.setOnTouchListener(object : View.OnTouchListener {
+            private var startX = 0f
+            private var startY = 0f
+            override fun onTouch(v: View, event: MotionEvent): Boolean {
+                when (event.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> { startX = event.x; startY = event.y }
+                    MotionEvent.ACTION_UP -> {
+                        val dx = event.x - startX
+                        val dy = event.y - startY
+                        if (abs(dx) > dp(55) && abs(dx) > abs(dy) * 1.25f) {
+                            val width = pager.width.coerceAtLeast(1)
+                            val current = pager.scrollX / width
+                            val next = (current + if (dx < 0) 1 else -1).coerceIn(0, pages.childCount - 1)
+                            pager.smoothScrollTo(next * width, 0)
+                            return true
+                        }
+                    }
+                }
+                return false
+            }
+        })
         vertical.addView(content, LinearLayout.LayoutParams(-1, 0, 1f))
 
         dock = LinearLayout(this).apply {
@@ -207,7 +227,7 @@ class MainActivity : Activity() {
                 }
                 grid.addView(tile, params)
             }
-            pages.addView(grid, LinearLayout.LayoutParams(resources.displayMetrics.widthPixels, -2))
+            pages.addView(grid, LinearLayout.LayoutParams(resources.displayMetrics.widthPixels - dp(40), -2))
         }
         updateDots(1)
     }
