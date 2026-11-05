@@ -76,7 +76,7 @@ class SettingsActivity : Activity() {
             text = title
             textSize = 16f
             setTextColor(Color.WHITE)
-            setTypeface(typeface, Typeface.MEDIUM)
+            setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL))
         })
         item.addView(TextView(this).apply {
             text = subtitle
