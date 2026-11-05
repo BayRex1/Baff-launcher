@@ -173,7 +173,7 @@ class MainActivity : Activity() {
         }
         val search = EditText(this).apply {
             hint = "Поиск приложений"
-            singleLine = true
+            setSingleLine(true)
             textSize = 16f
             background = rounded(0xFFF0F2F8.toInt(), 16)
             setPadding(dp(14), 0, dp(14), 0)
