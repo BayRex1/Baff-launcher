@@ -2,23 +2,28 @@
 
 A lightweight, ad-free Android home screen with an iOS-inspired visual style.
 
-> Early development — version 0.3.0. The current milestone adds horizontal home pages, swipe-up app drawer, long-press app actions, persistent home-screen selection and labels, custom icon images, icon color styles, a translucent dock, and app launch animations.
+> Early development — version 0.4.0. This milestone separates the normal BAFF app/settings screen from the HOME launcher, adds a full-screen app drawer with swipe-to-dismiss, AMOLED/dark/light drawer themes, and snap-style horizontal home pages.
 
 ## Compatibility
 
 - Android 9.0 (API 28) and newer.
 - Native Kotlin UI; no third-party runtime dependencies.
-- Rounded-square app icons.
-- System wallpaper is retained behind the launcher.
+- Rounded-square app icons and existing system wallpaper.
 - No ads, trackers, or subscriptions.
 
-## Home screen
+## Navigation
 
-- Swipe horizontally to move between home pages.
-- Swipe upward to open all apps.
-- Long-press an app to add/remove it from the home screen, rename it, choose a custom image icon, or request uninstall through Android.
-- Icon styles include original, monochrome, preset tints, custom HEX tint, and a user-selected image.
-- The bottom dock uses a translucent glass-like panel.
+- Swipe left/right across the home icons to switch home pages. A new page is created when more than 12 apps are pinned.
+- Swipe up anywhere on the home screen to open the app drawer.
+- Swipe down anywhere in the app drawer, or tap ×, to close it.
+- Long-press an app to pin/unpin it, rename it, choose a custom image icon, or request uninstall through Android.
+- The regular BAFF Launcher app icon opens a dedicated settings screen; the HOME activity is separate.
+
+## Appearance
+
+- App drawer themes: AMOLED black (default), dark, and light.
+- Icon styles: original, monochrome, preset tints, custom HEX tint, and per-app custom image.
+- Translucent dock and short app launch animations.
 
 ## Build
 
@@ -32,4 +37,4 @@ Debug APK: `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Notes
 
-This is an early launcher implementation. The dock is translucent rather than a true real-time blurred surface to retain compatibility with Android 9. App removal is confirmed by Android's system uninstall flow. License terms have not yet been selected.
+This is an early launcher implementation. App uninstall is delegated to Android's system confirmation flow. License terms have not yet been selected.
