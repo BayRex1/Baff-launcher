@@ -139,7 +139,7 @@ class MainActivity : Activity() {
             setShadowLayer(12f, 0f, 3f, Color.BLACK)
         }, LinearLayout.LayoutParams(-1, dp(112)))
 
-                content.addView(View(this), LinearLayout.LayoutParams(1, dp(54)))
+                content.addView(View(this), LinearLayout.LayoutParams(-1, dp(54)))
         pager = HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
             isFillViewport = true
