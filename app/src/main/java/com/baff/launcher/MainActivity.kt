@@ -3,6 +3,8 @@ package com.baff.launcher
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.ActivityOptions
+import android.app.Dialog
+import android.view.Window
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -51,6 +53,7 @@ class MainActivity : Activity() {
     private lateinit var pages: LinearLayout
     private lateinit var pageDots: TextView
     private lateinit var dock: LinearLayout
+    private var drawerDialog: Dialog? = null
     private var defaultPromptShown = false
     private var pendingIconPackage: String? = null
     private var downX = 0f
@@ -77,6 +80,7 @@ class MainActivity : Activity() {
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (drawerDialog?.isShowing == true) return super.dispatchTouchEvent(ev)
         if (ev.action == MotionEvent.ACTION_DOWN) {
             downX = ev.x
             downY = ev.y
@@ -129,21 +133,7 @@ class MainActivity : Activity() {
 
         val heading = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
         heading.addView(TextView(this).apply {
-            text = "Рабочий стол"
-            textSize = 17f
-            setTextColor(Color.WHITE)
-            setTypeface(typeface, Typeface.BOLD)
-        }, LinearLayout.LayoutParams(0, dp(44), 1f))
-        heading.addView(TextView(this).apply {
-            text = "⚙"
-            textSize = 24f
-            gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
-            background = glassBackground(18)
-            setOnClickListener { showLauncherSettings() }
-        }, LinearLayout.LayoutParams(dp(46), dp(42)))
-        content.addView(heading)
-
+        content.addView(View(this), LinearLayout.LayoutParams(1, dp(54)))
         pager = HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
             isFillViewport = true
@@ -160,7 +150,7 @@ class MainActivity : Activity() {
         }
         content.addView(pageDots, LinearLayout.LayoutParams(-1, dp(32)))
         pager.setOnScrollChangeListener { _, scrollX, _, _, _ ->
-            val page = (scrollX / resources.displayMetrics.widthPixels) + 1
+            val page = (scrollX / pager.width.coerceAtLeast(1)) + 1
             updateDots(page)
         }
         vertical.addView(content, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -241,6 +231,7 @@ class MainActivity : Activity() {
             maxLines = 1
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
+            tag = "app_label"
             setShadowLayer(5f, 0f, 1f, Color.BLACK)
             setPadding(0, dp(6), 0, 0)
         }, LinearLayout.LayoutParams(-1, dp(27)))
@@ -291,62 +282,53 @@ class MainActivity : Activity() {
     }
 
     private fun showAppDrawer() {
-        val shell = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(14), dp(18), dp(12))
-            background = GradientDrawable().apply {
-                setColor(0xFFF5F5F8.toInt())
-                cornerRadii = floatArrayOf(dp(24).toFloat(),dp(24).toFloat(),dp(24).toFloat(),dp(24).toFloat(),0f,0f,0f,0f)
-            }
-        }
-        shell.addView(TextView(this).apply {
-            text = "Все приложения"
-            textSize = 22f
-            setTypeface(typeface, Typeface.BOLD)
-            setTextColor(0xFF171923.toInt())
-            setPadding(0, 0, 0, dp(12))
-        })
-        val search = EditText(this).apply {
-            hint = "Поиск приложений"
-            setSingleLine(true)
-            textSize = 16f
-            background = rounded(0xFFE5E7ED.toInt(), 16)
-            setPadding(dp(14), 0, dp(14), 0)
-        }
-        shell.addView(search, LinearLayout.LayoutParams(-1, dp(50)))
-        val scroll = ScrollView(this)
+        if (drawerDialog?.isShowing == true) return
+        val theme = prefs.getString("drawer_theme", "amoled") ?: "amoled"
+        val bg = when (theme) { "light" -> 0xFFF4F5F8.toInt(); "dark" -> 0xFF17181D.toInt(); else -> Color.BLACK }
+        val fg = if (theme == "light") 0xFF171923.toInt() else Color.WHITE
+        val hint = if (theme == "light") 0xFF686B75.toInt() else 0xFFB9BBC4.toInt()
+        val dialog = Dialog(this)
+        drawerDialog = dialog
+        val shell = DrawerContainer(this) { dialog.dismiss() }.apply { orientation = LinearLayout.VERTICAL; setPadding(dp(18), dp(18), dp(18), dp(12)); setBackgroundColor(bg) }
+        val top = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
+        top.addView(TextView(this).apply { text = "Все приложения"; textSize = 23f; setTypeface(typeface, Typeface.BOLD); setTextColor(fg) }, LinearLayout.LayoutParams(0, dp(48), 1f))
+        top.addView(TextView(this).apply { text = "×"; textSize = 30f; gravity = Gravity.CENTER; setTextColor(fg); setOnClickListener { dialog.dismiss() } }, LinearLayout.LayoutParams(dp(44), dp(48)))
+        shell.addView(top)
+        val search = EditText(this).apply { hint = "Поиск приложений"; setSingleLine(true); textSize = 16f; setTextColor(fg); setHintTextColor(hint); background = rounded(if (theme == "light") 0xFFE5E7ED.toInt() else 0xFF24252B.toInt(), 16); setPadding(dp(14), 0, dp(14), 0) }
+        shell.addView(search, LinearLayout.LayoutParams(-1, dp(50)).apply { topMargin = dp(10) })
+        val scroll = ScrollView(this).apply { overScrollMode = View.OVER_SCROLL_NEVER }
         val grid = GridLayout(this).apply { columnCount = 4 }
         scroll.addView(grid)
-        shell.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
-        val dialog = AlertDialog.Builder(this).setView(shell).create()
+        shell.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f).apply { topMargin = dp(10) })
         fun populate(query: String) {
             grid.removeAllViews()
-            apps.filter { displayName(it).contains(query, true) || it.label.contains(query, true) }
-                .forEach { app ->
-                    val tile = createAppTile(app).apply {
-                        setOnClickListener { launchApp(app.packageName, this) }
-                        setOnLongClickListener { showAppActions(app); true }
-                    }
-                    val params = GridLayout.LayoutParams().apply {
-                        width = 0
-                        height = dp(108)
-                        columnSpec = GridLayout.spec(grid.childCount % 4, 1f)
-                        rowSpec = GridLayout.spec(grid.childCount / 4)
-                        setMargins(dp(2), dp(5), dp(2), dp(5))
-                    }
-                    grid.addView(tile, params)
-                }
+            apps.filter { displayName(it).contains(query, true) || it.label.contains(query, true) }.forEach { app ->
+                val tile = createAppTile(app).apply { setOnClickListener { launchApp(app.packageName, this); dialog.dismiss() }; setOnLongClickListener { showAppActions(app); true } }
+                tile.findViewWithTag<TextView>("app_label")?.setTextColor(fg)
+                val params = GridLayout.LayoutParams().apply { width = 0; height = dp(108); columnSpec = GridLayout.spec(grid.childCount % 4, 1f); rowSpec = GridLayout.spec(grid.childCount / 4); setMargins(dp(2), dp(5), dp(2), dp(5)) }
+                grid.addView(tile, params)
+            }
         }
         populate("")
         search.addTextChangedListener(SimpleTextWatcher { populate(it) })
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(shell)
+        dialog.window?.apply { setBackgroundDrawableResource(android.R.color.transparent); setDimAmount(0f); setLayout(-1, -1) }
+        dialog.setOnDismissListener { drawerDialog = null }
         dialog.show()
         dialog.window?.setLayout(-1, -1)
-        shell.alpha = 0f
-        shell.translationY = dp(36).toFloat()
-        shell.animate().alpha(1f).translationY(0f).setDuration(220).start()
+        shell.alpha = 0f; shell.translationY = dp(30).toFloat(); shell.animate().alpha(1f).translationY(0f).setDuration(220).start()
     }
 
+    private inner class DrawerContainer(context: android.content.Context, private val dismiss: () -> Unit) : LinearLayout(context) {
+        private var startX = 0f
+        private var startY = 0f
+        override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+            when (event.actionMasked) { MotionEvent.ACTION_DOWN -> { startX = event.x; startY = event.y }; MotionEvent.ACTION_MOVE -> { val dy = event.y - startY; val dx = event.x - startX; if (dy > dp(45) && dy > abs(dx) * 1.2f) return true } }
+            return super.onInterceptTouchEvent(event)
+        }
+        override fun onTouchEvent(event: MotionEvent): Boolean { if (event.actionMasked == MotionEvent.ACTION_UP) { if (event.y - startY > dp(45)) dismiss(); return true }; return true }
+    }
     private fun showAppActions(app: AppInfo) {
         val onHome = homePackages.contains(app.packageName)
         val actions = arrayOf(
@@ -423,24 +405,7 @@ class MainActivity : Activity() {
         startActivity(intent)
     }
 
-    private fun showLauncherSettings() {
-        val options = arrayOf(
-            "Стиль иконок",
-            "Выбрать BAFF по умолчанию",
-            "Все приложения",
-            "О лаунчере"
-        )
-        AlertDialog.Builder(this).setTitle("Настройки BAFF").setItems(options) { _, which ->
-            when (which) {
-                0 -> showIconStyles()
-                1 -> openHomeSettings()
-                2 -> showAppDrawer()
-                3 -> AlertDialog.Builder(this).setTitle("BAFF Launcher")
-                    .setMessage("Лёгкий домашний экран без рекламы. Версия 0.3.0.")
-                    .setPositiveButton("ОК", null).show()
-            }
-        }.show()
-    }
+    private fun showLauncherSettings() { startActivity(Intent(this, SettingsActivity::class.java)) }
 
     private fun showIconStyles() {
         val styles = arrayOf("Оригинальные", "Монохромные", "Голубой оттенок", "Розовый оттенок", "Мятный оттенок", "Свой цвет…")
