@@ -50,6 +50,7 @@ class MainActivity : Activity() {
     private lateinit var pager: HorizontalScrollView
     private lateinit var pages: LinearLayout
     private lateinit var pageDots: TextView
+    private lateinit var dock: LinearLayout
     private var defaultPromptShown = false
     private var pendingIconPackage: String? = null
     private var downX = 0f
@@ -164,7 +165,7 @@ class MainActivity : Activity() {
         }
         vertical.addView(content, LinearLayout.LayoutParams(-1, 0, 1f))
 
-        val dock = LinearLayout(this).apply {
+        dock = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             background = glassBackground(30).apply {
@@ -173,9 +174,7 @@ class MainActivity : Activity() {
             elevation = dp(16).toFloat()
             setPadding(dp(10), dp(8), dp(10), dp(8))
         }
-        homePackages.take(4).mapNotNull(::findApp).forEach { app ->
-            dock.addView(createIconView(app, dp(62), true), LinearLayout.LayoutParams(0, dp(68), 1f))
-        }
+        rebuildDock()
         root.addView(vertical, FrameLayout.LayoutParams(-1, -1))
         root.addView(dock, FrameLayout.LayoutParams(-1, dp(88), Gravity.BOTTOM).apply {
             leftMargin = dp(22)
@@ -188,6 +187,15 @@ class MainActivity : Activity() {
         root.scaleX = 0.985f
         root.scaleY = 0.985f
         root.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(300).start()
+    }
+
+    private fun rebuildDock() {
+        if (!::dock.isInitialized) return
+        dock.removeAllViews()
+        homePackages.take(4).mapNotNull(::findApp).forEach { app ->
+            dock.addView(createIconView(app, dp(62), true),
+                LinearLayout.LayoutParams(0, dp(68), 1f))
+        }
     }
 
     private fun rebuildPages() {
@@ -349,6 +357,7 @@ class MainActivity : Activity() {
                     else homePackages.add(app.packageName)
                     saveHomeApps()
                     rebuildPages()
+                    rebuildDock()
                 }
                 1 -> renameApp(app)
                 2 -> chooseCustomIcon(app)
@@ -367,6 +376,7 @@ class MainActivity : Activity() {
             .setPositiveButton("Сохранить") { _, _ ->
                 prefs.edit().putString("name_${app.packageName}", input.text.toString().trim()).apply()
                 rebuildPages()
+                rebuildDock()
             }.setNegativeButton("Отмена", null).show()
     }
 
@@ -384,6 +394,7 @@ class MainActivity : Activity() {
             } else {
                 prefs.edit().remove("icon_${app.packageName}").apply()
                 rebuildPages()
+                rebuildDock()
             }
         }.show()
     }
@@ -432,6 +443,7 @@ class MainActivity : Activity() {
         AlertDialog.Builder(this).setTitle("Оформление иконок").setItems(styles) { _, which ->
             prefs.edit().putString("icon_style", values[which]).apply()
             rebuildPages()
+            rebuildDock()
         }.show()
     }
 
