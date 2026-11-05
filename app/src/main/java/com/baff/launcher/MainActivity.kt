@@ -3,21 +3,18 @@ package com.baff.launcher
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.ActivityOptions
-import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.widget.BaseAdapter
 import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -201,15 +198,13 @@ class MainActivity : Activity() {
             ViewGroup.LayoutParams.MATCH_PARENT, dp(440)
         ).apply { topMargin = dp(10) })
 
-        AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
             .setTitle("Приложения")
             .setView(panel)
             .setNegativeButton("Закрыть", null)
             .create()
-            .also { dialog ->
-                dialog.window?.setBackgroundDrawable(rounded(Color.WHITE, 24))
-                dialog.show()
-            }
+        dialog.show()
+        dialog.window?.setBackgroundDrawable(rounded(Color.WHITE, 24))
     }
 
     private fun launchApp(packageName: String, source: View) {
@@ -259,7 +254,7 @@ class MainActivity : Activity() {
                 setPadding(dp(8), 0, dp(8), 0)
             }
             row.text = visible[position].label
-            row.height = dp(52)
+            row.minimumHeight = dp(52)
             return row
         }
         fun filter(query: String) {
