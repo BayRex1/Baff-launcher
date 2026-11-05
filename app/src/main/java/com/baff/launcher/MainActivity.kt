@@ -217,7 +217,7 @@ class MainActivity : Activity() {
 
     private fun rebuildPages() {
         pages.removeAllViews()
-        val pageCount = ceil(homePackages.size.coerceAtLeast(1) / 12.0).toInt()
+        val pageCount = ceil(homePackages.size.coerceAtLeast(1) / 12.0).toInt().coerceAtLeast(2)
         repeat(pageCount) { pageIndex ->
             val grid = GridLayout(this).apply { columnCount = 4 }
             homePackages.drop(pageIndex * 12).take(12).forEach { packageName ->
@@ -240,7 +240,7 @@ class MainActivity : Activity() {
     }
 
     private fun updateDots(current: Int) {
-        val count = ceil(homePackages.size.coerceAtLeast(1) / 12.0).toInt()
+        val count = ceil(homePackages.size.coerceAtLeast(1) / 12.0).toInt().coerceAtLeast(2)
         pageDots.text = (1..count).joinToString("   ") { if (it == current) "●" else "○" }
     }
 
