@@ -281,6 +281,11 @@ class MainActivity : Activity() {
             "blue" -> view.colorFilter = PorterDuffColorFilter(0xFF78A9FF.toInt(), PorterDuff.Mode.SRC_ATOP)
             "rose" -> view.colorFilter = PorterDuffColorFilter(0xFFFFA1C5.toInt(), PorterDuff.Mode.SRC_ATOP)
             "mint" -> view.colorFilter = PorterDuffColorFilter(0xFF7DE2C3.toInt(), PorterDuff.Mode.SRC_ATOP)
+            "custom" -> {
+                val color = try { Color.parseColor(prefs.getString("icon_custom_color", "#A9B8FF")) }
+                    catch (_: Exception) { 0xFFA9B8FF.toInt() }
+                view.colorFilter = PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP)
+            }
             else -> view.clearColorFilter()
         }
     }
@@ -438,13 +443,36 @@ class MainActivity : Activity() {
     }
 
     private fun showIconStyles() {
-        val styles = arrayOf("Оригинальные", "Монохромные", "Голубой оттенок", "Розовый оттенок", "Мятный оттенок")
+        val styles = arrayOf("Оригинальные", "Монохромные", "Голубой оттенок", "Розовый оттенок", "Мятный оттенок", "Свой цвет…")
         val values = arrayOf("original", "mono", "blue", "rose", "mint")
         AlertDialog.Builder(this).setTitle("Оформление иконок").setItems(styles) { _, which ->
-            prefs.edit().putString("icon_style", values[which]).apply()
-            rebuildPages()
-            rebuildDock()
+            if (which < values.size) {
+                prefs.edit().putString("icon_style", values[which]).apply()
+                rebuildPages()
+                rebuildDock()
+            } else showCustomIconColor()
         }.show()
+    }
+
+    private fun showCustomIconColor() {
+        val input = EditText(this).apply {
+            hint = "#A9B8FF"
+            setSingleLine(true)
+            setText(prefs.getString("icon_custom_color", "#A9B8FF"))
+        }
+        AlertDialog.Builder(this).setTitle("Цвет иконок (HEX)").setMessage("Например: #A9B8FF")
+            .setView(input).setPositiveButton("Применить") { _, _ ->
+                val value = input.text.toString().trim()
+                try {
+                    Color.parseColor(value)
+                    prefs.edit().putString("icon_custom_color", value)
+                        .putString("icon_style", "custom").apply()
+                    rebuildPages()
+                    rebuildDock()
+                } catch (_: Exception) {
+                    AlertDialog.Builder(this).setMessage("Неверный HEX-цвет").setPositiveButton("ОК", null).show()
+                }
+            }.setNegativeButton("Отмена", null).show()
     }
 
     private fun showDefaultLauncherPrompt() {
