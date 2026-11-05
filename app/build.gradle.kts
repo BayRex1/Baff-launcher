@@ -9,21 +9,17 @@ android {
 
     defaultConfig {
         applicationId = "com.baff.launcher"
-        minSdk = 24
+        minSdk = 28
         targetSdk = 28
-        versionCode = 1
-        versionName = "0.1.0"
-
+        versionCode = 2
+        versionName = "0.2.0"
         vectorDrawables.useSupportLibrary = false
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         debug {
             applicationIdSuffix = ".debug"
@@ -35,7 +31,5 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+    kotlinOptions { jvmTarget = "17" }
 }
