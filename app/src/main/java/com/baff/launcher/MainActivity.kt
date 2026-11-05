@@ -87,6 +87,13 @@ class MainActivity : Activity() {
         } else if (ev.action == MotionEvent.ACTION_UP) {
             val dx = ev.x - downX
             val dy = ev.y - downY
+            if (abs(dx) > dp(90) && abs(dx) > abs(dy) * 1.25f && ::pager.isInitialized) {
+                val width = pager.width.coerceAtLeast(1)
+                val current = pager.scrollX / width
+                val next = (current + if (dx < 0) 1 else -1).coerceIn(0, pages.childCount - 1)
+                pager.smoothScrollTo(next * width, 0)
+                return true
+            }
             if (dy < -dp(90) && abs(dy) > abs(dx) * 1.25f) {
                 showAppDrawer()
                 return true
