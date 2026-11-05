@@ -313,7 +313,7 @@ class MainActivity : Activity() {
         val theme = prefs.getString("drawer_theme", "amoled") ?: "amoled"
         val bg = when (theme) { "light" -> 0xFFF4F5F8.toInt(); "dark" -> 0xFF17181D.toInt(); else -> Color.BLACK }
         val fg = if (theme == "light") 0xFF171923.toInt() else Color.WHITE
-        val hint = if (theme == "light") 0xFF686B75.toInt() else 0xFFB9BBC4.toInt()
+        val hintColor = if (theme == "light") 0xFF686B75.toInt() else 0xFFB9BBC4.toInt()
         val dialog = Dialog(this)
         drawerDialog = dialog
         val shell = DrawerContainer(this) { dialog.dismiss() }.apply { orientation = LinearLayout.VERTICAL; setPadding(dp(18), dp(18), dp(18), dp(12)); setBackgroundColor(bg) }
@@ -321,7 +321,7 @@ class MainActivity : Activity() {
         top.addView(TextView(this).apply { text = "Все приложения"; textSize = 23f; setTypeface(typeface, Typeface.BOLD); setTextColor(fg) }, LinearLayout.LayoutParams(0, dp(48), 1f))
         top.addView(TextView(this).apply { text = "×"; textSize = 30f; gravity = Gravity.CENTER; setTextColor(fg); setOnClickListener { dialog.dismiss() } }, LinearLayout.LayoutParams(dp(44), dp(48)))
         shell.addView(top)
-        val search = EditText(this).apply { hint = "Поиск приложений"; setSingleLine(true); textSize = 16f; setTextColor(fg); setHintTextColor(hint); background = rounded(if (theme == "light") 0xFFE5E7ED.toInt() else 0xFF24252B.toInt(), 16); setPadding(dp(14), 0, dp(14), 0) }
+        val search = EditText(this).apply { hint = "Поиск приложений"; setSingleLine(true); textSize = 16f; setTextColor(fg); setHintTextColor(hintColor); background = rounded(if (theme == "light") 0xFFE5E7ED.toInt() else 0xFF24252B.toInt(), 16); setPadding(dp(14), 0, dp(14), 0) }
         shell.addView(search, LinearLayout.LayoutParams(-1, dp(50)).apply { topMargin = dp(10) })
         val scroll = ScrollView(this).apply { overScrollMode = View.OVER_SCROLL_NEVER }
         val grid = GridLayout(this).apply { columnCount = 4 }
